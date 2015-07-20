@@ -116,6 +116,26 @@ class TelegramBotServer():
             "Estás más solo que el Rey en un meeting de Podemos",
             "A más de 300 kilómetros no son cuernos. El problema es que " +
             "allí sigo estando forever alone",
+            "Sorry, no",
+            "Jesús te ama",
+            "Welcome to the friendzone!",
+            "¿Quieres un abrazo? Pues te jodes, no tengo brazos",
+            "¿Dices que tienes dos entradas de cine? Felicidades, así " +
+            "la puedes ir a ver dos veces",
+            "¿Qué haces hablando aquí? Todo el mundo está de juerga",
+            "Deja de escribir y trabaja... ¡aunque sólo sea un poquito!",
+            "Paciencia, en Halloween podrás salir a la calle",
+            "Si tu perro pasa de ti, ¿qué quieres que te diga yo?",
+            "Acuario: te sientes con energías, pero estarás muy S O L O",
+            "Talking to me?",
+            "Youuu shaaall not paaaaaaaaaaaass",
+            "Te quiero, pero como amigo",
+            "Vete a cenar con el Nan",
+            "Mi vida amorosa es mágica. Nada por allí, nada por allá.",
+            "¿Quién? ¿Quién? ¿Quién te escucha?",
+            "Si hubieras comprado Smirnoff del bueno, al menos te hablarían",
+            "Si yo iría a hablar contigo, pero ir pa na', tontería",
+            "Copito",
         ]
 
         return phrases[randrange(len(phrases))]
