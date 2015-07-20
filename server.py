@@ -46,7 +46,11 @@ class TelegramBotServer():
 
     def get_data(self):
         params = {'offset': self.last_update_id + 1}
-        return requests.get(self.api_url + "getUpdates", params=params).json()
+        try:
+            return requests.get(self.api_url + "getUpdates", params=params) \
+                .json()
+        except requests.exceptions.ConnectionError:
+            return {}
 
     def data_is_ok(self, data):
         return data.get('ok', False)
@@ -78,8 +82,16 @@ class TelegramBotServer():
     def process_foreveralone(self, text, chat_id):
         data = {'chat_id': chat_id,
                 'text': self.get_random_phrase()}
-        response = requests.post(self.api_url + "sendMessage", data=data)
-        return response.json().get('ok', False)
+        response_status = self._send_post_request("sendMessage", data)
+        return response_status
+
+    def _send_post_request(self, method, data):
+        try:
+            response = requests.post("%s%s" % (self.api_url, method),
+                                     data=data)
+            return response.json().get('ok', False)
+        except requests.exceptions.ConnectionError:
+            return False
 
     def get_random_phrase(self):
         phrases = [
