@@ -6,15 +6,77 @@ from random import randrange
 import requests
 
 
+class TelegramAPIHelper():
+    emojis = {
+        ':+1:': u'\U0001F44D',
+    }
+
+    def __init__(self, token):
+        self.last_update_id = 0
+        self.url = "https://api.telegram.org/bot%s/" % token
+
+    def get_new_messages(self, mark_as_read=True):
+        data = self._get_data(mark_as_read)
+        self.raw_messages = data.get('result', [])
+        self.messages = self._parse_raw_messages()
+
+        return self.messages
+
+    def update_offset(self):
+        if not len(self.messages):
+            return
+        self.last_update_id = self.messages[-1].get('update_id')
+
+    def send_message(self, chat, message, tries=5):
+        success = False
+        while not success and tries > 0:
+            data = {'chat_id': chat, 'text': message}
+            success = self._send_post_request("sendMessage", data)
+            tries -= 1
+            sleep(1)
+
+    def reply(self, message, text):
+        pass
+
+    def _get_data(self, mark_as_read):
+        params = {'offset': self.last_update_id + 1} if mark_as_read else {}
+        try:
+            response = requests.get(self.url + "getUpdates", params=params)
+        except requests.exceptions.ConnectionError:
+            return {}
+
+        if not response.ok:
+            return {}
+
+        return response.json()
+
+    def _parse_raw_messages(self):
+        messages = []
+        for raw_message in self.raw_messages:
+            message = raw_message.get('message', {})
+            message['update_id'] = raw_message.get('update_id', 0)
+            messages.append(message)
+
+        return messages
+
+    def _send_post_request(self, method, data):
+        try:
+            response = requests.post("%s%s" % (self.url, method),
+                                     data=data)
+            return response.ok
+        except requests.exceptions.ConnectionError:
+            return False
+
+
 class TelegramBotServer():
     last_update_id = 0
     token = ""
-    api_url = "https://api.telegram.org/bot%s/" % token
     available_commands = ['/foreveralone']
     sleep_time = 10
 
     def __init__(self, debug=False):
         self.debug_flag = debug
+        self.telegram = TelegramAPIHelper(self.token)
 
     def debug(self, message):
         if self.debug_flag:
@@ -25,44 +87,18 @@ class TelegramBotServer():
         dry_run = True
         while True:
             self.debug("Fetching data")
-            data = self.get_data()
-
-            if not self.data_is_ok(data):
-                continue
-
-            messages = [x.get('message', {}) for x in data.get('result', [])]
-            (messages, next_update_id) = self.process_data(data)
+            messages = self.telegram.get_new_messages()
+            self.telegram.update_offset()
             self.debug("Processing %d messages" % len(messages))
+
             for message in messages:
                 if not self.is_group_chat(message) or dry_run:
                     continue
                 self.process_message(message, self.get_chat_id(message))
 
-            self.last_update_id = next_update_id
-            self.debug("The new update_id is %s" % self.last_update_id)
             dry_run = False
 
             sleep(self.sleep_time)
-
-    def get_data(self):
-        params = {'offset': self.last_update_id + 1}
-        try:
-            return requests.get(self.api_url + "getUpdates", params=params) \
-                .json()
-        except requests.exceptions.ConnectionError:
-            return {}
-
-    def data_is_ok(self, data):
-        return data.get('ok', False)
-
-    def process_data(self, data):
-        messages = [x.get('message', {}) for x in data.get('result', [])]
-        update_id = self.last_update_id
-        if len(messages):
-            update_id = data['result'][-1].get('update_id',
-                                               self.last_update_id)
-
-        return (messages, update_id)
 
     def is_group_chat(self, message):
         return self.get_chat_id(message) < 0
@@ -80,24 +116,14 @@ class TelegramBotServer():
         getattr(self, "process_%s" % text[0][1:])(text, chat_id)
 
     def process_foreveralone(self, text, chat_id):
-        data = {'chat_id': chat_id,
-                'text': self.get_random_phrase()}
-        response_status = self._send_post_request("sendMessage", data)
-        return response_status
-
-    def _send_post_request(self, method, data):
-        try:
-            response = requests.post("%s%s" % (self.api_url, method),
-                                     data=data)
-            return response.json().get('ok', False)
-        except requests.exceptions.ConnectionError:
-            return False
+        self.telegram.send_message(chat_id, self.get_random_phrase())
 
     def get_random_phrase(self):
+        emojis = self.telegram.emojis
         phrases = [
             "Tranquilo, estoy aquí contigo... no estás solito",
             "Esto no lo salva ni Chico Terremoto",
-            "Mejor escribe en el grupo del porno :+1:",
+            "Mejor escribe en el grupo del porno %s" % emojis[':+1:'],
             "¡Déjame en paz! Estoy hablando con un amigo...",
             "¡Estoy harto de ser un segundo plato! ¡Sólo te acuerdas de " +
             "mí cuando nadie te hace caso!",
