@@ -43,7 +43,6 @@ class TelegramBotServer():
             self.debug("Processing %d messages" % len(messages))
 
             for message in messages:
-                # if not message.is_group_chat() or dry_run:
                 if dry_run:
                     continue
                 self.process_message(message)
@@ -146,4 +145,4 @@ class TelegramBotServer():
         "Talking to me?"
     ]
 if __name__ == "__main__":
-    TelegramBotServer(debug=True).run_server()
+    TelegramBotServer().run_server()
