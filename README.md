@@ -3,4 +3,4 @@ FOREVER ALONE BOT
 
 A Telegram bot to handle those awkwards moments when a Foreve Alone takes place.
 
-Python client to consume Telegram Bot API using Python requests.
+You need to have this repo https://github.com/figarocorso/telegram_bot_helper cloned inside this folder
