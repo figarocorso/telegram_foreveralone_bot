@@ -15,6 +15,7 @@ class TelegramBotServer():
     LANGUAGE_DB = 'languages.db'
     CONFIGURATION_FILE = 'foreveralone.cfg'
     phrases = {}
+    chat_languages = {}
     last_update_id = 0
     sleep_time = 10
     available_languages = {}
@@ -35,7 +36,7 @@ class TelegramBotServer():
         self.get_configuration()
         self.telegram = TelegramAPIHelper(self.token)
         self.load_phrases()
-        self._load_languages_db_from_file()
+        self._load_chat_languages_db_from_file()
 
     def get_configuration(self):
         self.config = ConfigParser.RawConfigParser()
@@ -95,7 +96,7 @@ class TelegramBotServer():
     def process_foreveralone(self, message):
         self.debug("Processing a command: %s" % message.command)
         phrase = self.get_random_phrase(
-            self.languages.get(message.chat_id, self.default_language))
+            self.chat_languages.get(message.chat_id, self.default_language))
         self.telegram.send_message(message.chat_id, phrase)
 
     def process_spanish(self, message):
@@ -106,13 +107,13 @@ class TelegramBotServer():
 
     def process_language(self, message, language):
         self.debug("Setting language: (%s - %s)" % (message.chat_id, language))
-        self.languages[message.chat_id] = language
+        self.chat_languages[message.chat_id] = language
         text = {
             'es': "Idioma cambiado correctamente",
             'en': "English language selected"
         }
         self.telegram.send_message(message.chat_id, text[language])
-        self._save_languages_db_to_file()
+        self._save_chat_languages_db_to_file()
 
     def send_welcome_text(self, message):
         self.debug("Processing a welcome")
@@ -126,14 +127,14 @@ class TelegramBotServer():
         phrases_array = self.phrases.get(language, self.default_language)
         return phrases_array[randrange(len(phrases_array))]
 
-    def _load_languages_db_from_file(self):
+    def _load_chat_languages_db_from_file(self):
         if os.path.isfile(self.LANGUAGE_DB):
             with open(self.LANGUAGE_DB, 'r') as languages_file:
-                self.languages = pickle.load(languages_file)
+                self.chat_languages = pickle.load(languages_file)
 
-    def _save_languages_db_to_file(self):
+    def _save_chat_languages_db_to_file(self):
         with open(self.LANGUAGE_DB, 'w') as languages_file:
-            pickle.dump(self.languages, languages_file)
+            pickle.dump(self.chat_languages, languages_file)
 
 if __name__ == "__main__":
     TelegramBotServer().run_server()
