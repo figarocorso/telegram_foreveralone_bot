@@ -6,15 +6,15 @@ from telegram_bot_helper.emojis import Emojis
 from random import randrange
 from time import sleep
 
+import ConfigParser
 import pickle
 import os.path
 
 
 class TelegramBotServer():
     LANGUAGE_DB = 'languages.db'
+    CONFIGURATION_FILE = 'foreveralone.cfg'
     last_update_id = 0
-    bot_id = ''
-    token = ""
     sleep_time = 10
     languages = {}
     available_commands = ['foreveralone', 'info', 'spanish', 'english']
@@ -31,8 +31,20 @@ class TelegramBotServer():
 
     def __init__(self, debug=False):
         self.debug_flag = debug
+        self.get_configuration()
         self.telegram = TelegramAPIHelper(self.token)
         self._load_languages_db_from_file()
+
+    def get_configuration(self):
+        self.config = ConfigParser.RawConfigParser()
+        self.config.read(self.CONFIGURATION_FILE)
+        try:
+            self.token = self.config.get('main', 'token')
+            self.bot_id = self.config.get('main', 'bot_id')
+            self.default_language = self.config.get('main', 'default_language')
+        except (ConfigParser.NoOptionError, ConfigParser.NoSectionError) as e:
+            print "Cannot load configuration file"
+            print e.message
 
     def debug(self, message):
         if self.debug_flag:
@@ -71,8 +83,9 @@ class TelegramBotServer():
 
     def process_foreveralone(self, message):
         self.debug("Processing a command: %s" % message.command)
-        phrase = self.get_random_phrase(self.languages.get(message.chat_id,
-                                                           'en'))
+        phrase = self.get_random_phrase(
+            self.languages.get(message.chat_id,
+                               self.default_language))
         self.telegram.send_message(message.chat_id, phrase)
 
     def process_spanish(self, message):
