@@ -17,7 +17,7 @@ class TelegramBotServer():
     phrases = {}
     last_update_id = 0
     sleep_time = 10
-    languages = {}
+    available_languages = {}
     available_commands = ['foreveralone', 'info', 'spanish', 'english']
     welcome_text = ("Hello! I cannot read your messages but, when in a "
                     "group, ping me with a /foreveralone command and you "
@@ -44,13 +44,14 @@ class TelegramBotServer():
             self.token = self.config.get('main', 'token')
             self.bot_id = self.config.get('main', 'bot_id')
             self.default_language = self.config.get('main', 'default_language')
-            self.languages = self.config.get('main', 'languages').split(', ')
+            self.available_languages = self.config.get('main',
+                                                       'languages').split(', ')
         except (ConfigParser.NoOptionError, ConfigParser.NoSectionError) as e:
             print "Cannot load configuration file"
             print e.message
 
     def load_phrases(self):
-        for lan in self.languages:
+        for lan in self.available_languages:
             try:
                 self.phrases[lan] = getattr(Phrases, "%s_phrases" % lan)
             except AttributeError:
@@ -94,8 +95,7 @@ class TelegramBotServer():
     def process_foreveralone(self, message):
         self.debug("Processing a command: %s" % message.command)
         phrase = self.get_random_phrase(
-            self.languages.get(message.chat_id,
-                               self.default_language))
+            self.languages.get(message.chat_id, self.default_language))
         self.telegram.send_message(message.chat_id, phrase)
 
     def process_spanish(self, message):
