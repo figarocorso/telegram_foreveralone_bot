@@ -3,11 +3,15 @@ from telegram_bot_helper.api import (TelegramAPIHelper, CommandMessage,
                                      JoinMessage)
 from telegram_bot_helper.emojis import Emojis
 
-from time import sleep
 from random import randrange
+from time import sleep
+
+import pickle
+import os.path
 
 
 class TelegramBotServer():
+    LANGUAGE_DB = 'languages.db'
     last_update_id = 0
     bot_id = ''
     token = ""
@@ -28,6 +32,7 @@ class TelegramBotServer():
     def __init__(self, debug=False):
         self.debug_flag = debug
         self.telegram = TelegramAPIHelper(self.token)
+        self._load_languages_db_from_file()
 
     def debug(self, message):
         if self.debug_flag:
@@ -84,6 +89,7 @@ class TelegramBotServer():
             'en': "English language selected"
         }
         self.telegram.send_message(message.chat_id, text[language])
+        self._save_languages_db_to_file()
 
     def send_welcome_text(self, message):
         self.debug("Processing a welcome")
@@ -96,6 +102,15 @@ class TelegramBotServer():
     def get_random_phrase(self, language):
         phrases_array = getattr(self, "%s_phrases" % language)
         return phrases_array[randrange(len(phrases_array))]
+
+    def _load_languages_db_from_file(self):
+        if os.path.isfile(self.LANGUAGE_DB):
+            with open(self.LANGUAGE_DB, 'r') as languages_file:
+                self.languages = pickle.load(languages_file)
+
+    def _save_languages_db_to_file(self):
+        with open(self.LANGUAGE_DB, 'w') as languages_file:
+            pickle.dump(self.languages, languages_file)
 
     es_phrases = [
         "Tranquilo, estoy aquí contigo... no estás solito",
