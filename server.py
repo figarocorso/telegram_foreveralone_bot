@@ -34,7 +34,7 @@ class TelegramBotServer():
     def __init__(self, debug=False):
         self.debug_flag = debug
         self.get_configuration()
-        self.telegram = TelegramAPIHelper(self.token)
+        self.telegram = TelegramAPIHelper(self.token, self.bot_name)
         self.load_phrases()
         self._load_chat_languages_db_from_file()
 
@@ -44,6 +44,7 @@ class TelegramBotServer():
         try:
             self.token = self.config.get('main', 'token')
             self.bot_id = self.config.get('main', 'bot_id')
+            self.bot_name = self.config.get('main', 'bot_name')
             self.default_language = self.config.get('main', 'default_language')
             self.available_languages = self.config.get('main',
                                                        'languages').split(', ')
