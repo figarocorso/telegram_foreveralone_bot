@@ -98,7 +98,7 @@ class TelegramBotServer():
         self.debug("Processing a command: %s" % message.command)
         phrase = self.get_random_phrase(
             self.chat_languages.get(message.chat_id, self.default_language))
-        self.telegram.send_message(message.chat_id, phrase)
+        self.telegram.send_message(self._get_data(message, phrase))
 
     def process_spanish(self, message):
         self.process_language(message, 'es')
@@ -113,16 +113,19 @@ class TelegramBotServer():
             'es': "Idioma cambiado correctamente",
             'en': "English language selected"
         }
-        self.telegram.send_message(message.chat_id, text[language])
+        self.telegram.send_message(self._get_data(message, text[language]))
         self._save_chat_languages_db_to_file()
 
     def send_welcome_text(self, message):
         self.debug("Processing a welcome")
-        self.telegram.send_message(message.chat_id, self.welcome_text)
+        self.telegram.send_message(self._get_data(message, self.welcome_text))
 
     def process_info(self, message):
         self.debug("Processing a info command")
-        self.telegram.send_message(message.chat_id, self.welcome_text)
+        self.telegram.send_message(self._get_data(message, self.welcome_text))
+
+    def _get_data(self, message, text):
+        return {'chat_id': message.chat_id, 'text': text}
 
     def get_random_phrase(self, language):
         phrases_array = self.phrases.get(language, self.default_language)
